@@ -1,0 +1,3 @@
+generate_word_ladder("cat", "dog") passed
+generate_word_ladder("marty", "curls") passed
+generate_word_ladder("code", "data") passed
