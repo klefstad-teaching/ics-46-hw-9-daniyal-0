@@ -1,10 +1,64 @@
 #include "ladder.h"
+#include <iostream>
+#include <fstream>
+#include <queue>
+#include <set>
+#include <string>
+#include <stdexcept>
+#include <algorithm>
+#include <cctype>
 
 void error(string word1, string word2, string msg) {
     cerr << "Error: " << msg 
          << " (word1: '" << word1 
          << "', word2: '" << word2 << "')" 
          << endl;
+}
+
+static vector<string> generate_neighbors(const string &word, 
+                                         const set<string> &word_list)
+{
+    vector<string> result;
+
+    // ----- a) Substitutions
+    for (int i = 0; i < (int)word.size(); ++i) {
+        char original = word[i];
+        for (char c = 'a'; c <= 'z'; ++c) {
+            if (c == original) continue;  // skip no-op
+            string new_word = word;
+            new_word[i] = c;
+            // check dictionary
+            if (word_list.count(new_word)) {
+                result.push_back(new_word);
+            }
+        }
+    }
+
+    // ----- b) Insertions
+    // We can insert a letter at any position [0..size()]
+    // e.g. for "cat", we can insert before 'c', between 'c' & 'a',
+    // between 'a' & 't', or after 't'.
+    for (int i = 0; i <= (int)word.size(); ++i) {
+        for (char c = 'a'; c <= 'z'; ++c) {
+            string new_word = word.substr(0,i) + c + word.substr(i);
+            if (word_list.count(new_word)) {
+                result.push_back(new_word);
+            }
+        }
+    }
+
+    // ----- c) Deletions
+    // We can delete any 1 character, so long as word.size() > 0
+    if (!word.empty()) {
+        for (int i = 0; i < (int)word.size(); ++i) {
+            string new_word = word.substr(0,i) + word.substr(i+1);
+            if (word_list.count(new_word)) {
+                result.push_back(new_word);
+            }
+        }
+    }
+
+    return result;
 }
 
 bool edit_distance_within(const std::string& str1, const std::string& str2, int d)
@@ -58,40 +112,54 @@ vector<string> generate_word_ladder(const string& begin_word,
                                     const set<string>& word_list)
 {
     if (begin_word == end_word) {
-        error(begin_word, end_word, "Start and end words are identical.");
+        error(begin_word, end_word, 
+              "Start and end words are identical.");
         return {};
     }
     if (!word_list.count(end_word)) {
-        error(begin_word, end_word, "End word not in dictionary.");
+        error(begin_word, end_word,
+              "End word not in dictionary.");
         return {};
     }
 
+    // 3b) BFS data structures
     queue<vector<string>> ladder_queue;
-    set<string> visited;
+    set<string> visited; // to avoid reusing words in multiple partial ladders
 
+    // Even if begin_word is not in the dictionary, we can still start from it
     ladder_queue.push({begin_word});
-    visited.insert(begin_word); 
+    visited.insert(begin_word);
 
+    // 3c) BFS loop
     while (!ladder_queue.empty()) {
         vector<string> ladder = ladder_queue.front();
         ladder_queue.pop();
 
-        const string& last_word = ladder.back();
+        // The last word in the current partial ladder
+        const string &last_word = ladder.back();
 
-        for (auto&& w : word_list) {
-            if (visited.count(w) == 0 && is_adjacent(last_word, w)) {
+        // Generate all neighbor words that are in the dictionary
+        vector<string> neighbors = generate_neighbors(last_word, word_list);
+        for (auto &neighbor : neighbors) {
+            // If not yet visited
+            if (!visited.count(neighbor)) {
+                visited.insert(neighbor);
+
+                // Extend the ladder
                 vector<string> new_ladder = ladder;
-                new_ladder.push_back(w);
-                visited.insert(w); 
+                new_ladder.push_back(neighbor);
 
-                if (w == end_word) {
+                // If it's the end_word, we are done
+                if (neighbor == end_word) {
                     return new_ladder;
                 }
+                // Otherwise, enqueue the new partial ladder
                 ladder_queue.push(new_ladder);
             }
         }
     }
 
+    // If BFS exhausts the queue with no success, no ladder exists
     return {};
 }
 
@@ -103,6 +171,7 @@ void load_words(set<string> & word_list, const string& file_name)
     }
     string word;
     while (in >> word) {
+        // to lowercase
         for (char &c : word) {
             c = static_cast<char>(tolower(c));
         }
@@ -118,11 +187,9 @@ void print_word_ladder(const vector<string>& ladder)
         return;
     }
     cout << "Word ladder found: ";
-    
-    for (size_t i = 0; i < ladder.size(); ++i) {
-        cout << ladder[i] << " ";
+    for (auto &word : ladder) {
+        cout << word << " ";
     }
-
     cout << endl;
 }
 
