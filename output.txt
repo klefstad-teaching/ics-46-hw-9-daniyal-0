@@ -1,3 +1,8 @@
 generate_word_ladder("cat", "dog") passed
 generate_word_ladder("marty", "curls") passed
 generate_word_ladder("code", "data") passed
+generate_word_ladder("work", "play") passed
+generate_word_ladder("sleep", "awake") passed
+generate_word_ladder("car", "cheat") passed
+
+verify_word_ladder() tests completed.
