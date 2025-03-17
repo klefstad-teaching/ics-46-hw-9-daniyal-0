@@ -50,17 +50,25 @@ vector<int> extract_shortest_path(const vector<int>& distances,
                                   const vector<int>& previous, 
                                   int destination)
 {
-    if (destination < 0 || destination >= (int)distances.size() 
-        || distances[destination] == INF) {
-        return {};
+    if (destination < 0 || destination >= (int)distances.size() || distances[destination] == INF)
+    {
+        return vector<int>();
     }
-
-    vector<int> path;
-    for (int v = destination; v != -1; v = previous[v]) {
-        path.push_back(v);
+    
+    int count = 0;
+    for (int v = destination; v != -1; v = previous[v])
+    {
+        count++;
     }
-
-    reverse(path.begin(), path.end());
+    
+    vector<int> path(count);
+    
+    int index = count - 1;
+    for (int v = destination; v != -1; v = previous[v])
+    {
+        path[index--] = v;
+    }
+    
     return path;
 }
 
