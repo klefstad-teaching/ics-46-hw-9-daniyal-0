@@ -19,25 +19,18 @@ static vector<string> generate_neighbors(const string &word,
                                          const set<string> &word_list)
 {
     vector<string> result;
-
-    // ----- a) Substitutions
     for (int i = 0; i < (int)word.size(); ++i) {
         char original = word[i];
         for (char c = 'a'; c <= 'z'; ++c) {
-            if (c == original) continue;  // skip no-op
+            if (c == original) continue;
             string new_word = word;
             new_word[i] = c;
-            // check dictionary
             if (word_list.count(new_word)) {
                 result.push_back(new_word);
             }
         }
     }
 
-    // ----- b) Insertions
-    // We can insert a letter at any position [0..size()]
-    // e.g. for "cat", we can insert before 'c', between 'c' & 'a',
-    // between 'a' & 't', or after 't'.
     for (int i = 0; i <= (int)word.size(); ++i) {
         for (char c = 'a'; c <= 'z'; ++c) {
             string new_word = word.substr(0,i) + c + word.substr(i);
@@ -47,8 +40,6 @@ static vector<string> generate_neighbors(const string &word,
         }
     }
 
-    // ----- c) Deletions
-    // We can delete any 1 character, so long as word.size() > 0
     if (!word.empty()) {
         for (int i = 0; i < (int)word.size(); ++i) {
             string new_word = word.substr(0,i) + word.substr(i+1);
@@ -120,11 +111,9 @@ vector<string> generate_word_ladder(const string& begin_word,
         return {};
     }
 
-    // BFS setup
     queue<vector<string>> ladder_queue;
     set<string> visited;
-    
-    // Start the queue with the begin_word
+
     ladder_queue.push({begin_word});
     visited.insert(begin_word);
 
@@ -134,21 +123,17 @@ vector<string> generate_word_ladder(const string& begin_word,
 
         const string &last_word = ladder.back();
 
-        // Generate neighbors (1-step insert, delete, or substitute) 
         vector<string> neighbors = generate_neighbors(last_word, word_list);
 
-        // ***** Sort neighbors so BFS visits them in ascending order *****
         std::sort(neighbors.begin(), neighbors.end());
 
         for (auto &neighbor : neighbors) {
             if (!visited.count(neighbor)) {
                 visited.insert(neighbor);
 
-                // Build the new ladder
                 vector<string> new_ladder = ladder;
                 new_ladder.push_back(neighbor);
 
-                // If it's the end_word, return immediately
                 if (neighbor == end_word) {
                     return new_ladder;
                 }
@@ -158,7 +143,6 @@ vector<string> generate_word_ladder(const string& begin_word,
         }
     }
 
-    // No ladder found
     return {};
 }
 
@@ -170,7 +154,6 @@ void load_words(set<string> & word_list, const string& file_name)
     }
     string word;
     while (in >> word) {
-        // to lowercase
         for (char &c : word) {
             c = static_cast<char>(tolower(c));
         }
