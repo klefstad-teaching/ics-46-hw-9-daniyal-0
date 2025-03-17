@@ -54,44 +54,34 @@ static vector<string> generate_neighbors(const string &word,
 
 bool edit_distance_within(const std::string& str1, const std::string& str2, int d)
 {
-    if (std::abs((int)str1.size() - (int)str2.size()) > d) {
+    if (std::abs((int)str1.size() - (int)str2.size()) > d)
         return false;
-    }
 
-    int n = (int)str1.size();
-    int m = (int)str2.size();
-    std::vector<int> dp_prev(m+1), dp_curr(m+1);
+    int m = str1.size(), n = str2.size();
+    std::vector<int> dp(n+1);
 
-    for (int j = 0; j <= m; j++) {
-        dp_prev[j] = j;
-    }
+    for (int j = 0; j <= n; j++)
+        dp[j] = j;
 
-    for (int i = 1; i <= n; i++) {
-        dp_curr[0] = i;
-        int row_min = dp_curr[0]; 
+    for (int i = 1; i <= m; i++) {
+        int prev = dp[0];
+        dp[0] = i;
+        int row_min = dp[0];
 
-        for (int j = 1; j <= m; j++) {
+        for (int j = 1; j <= n; j++) {
+            int temp = dp[j];
             int cost = (str1[i-1] == str2[j-1]) ? 0 : 1;
-
-            dp_curr[j] = std::min({
-                dp_prev[j-1] + cost,
-                dp_prev[j]   + 1,
-                dp_curr[j-1] + 1  
-            });
-
-            if (dp_curr[j] < row_min) {
-                row_min = dp_curr[j];
-            }
+            dp[j] = std::min(std::min(prev + cost, dp[j] + 1), dp[j-1] + 1);
+            
+            if (dp[j] < row_min)
+                row_min = dp[j];
+            prev = temp;
         }
 
-        dp_prev.swap(dp_curr);
-
-        if (row_min > d) {
+        if (row_min > d)
             return false;
-        }
     }
-
-    return (dp_prev[m] <= d);
+    return dp[n] <= d;
 }
 
 bool is_adjacent(const string& word1, const string& word2) {
