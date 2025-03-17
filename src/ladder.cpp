@@ -72,7 +72,7 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
             int temp = dp[j];
             int cost = (str1[i-1] == str2[j-1]) ? 0 : 1;
             dp[j] = std::min(std::min(prev + cost, dp[j] + 1), dp[j-1] + 1);
-            
+
             if (dp[j] < row_min)
                 row_min = dp[j];
             prev = temp;
@@ -96,43 +96,37 @@ vector<string> generate_word_ladder(const string& begin_word,
         error(begin_word, end_word, "Start and end words are identical.");
         return {};
     }
+    
     if (!word_list.count(end_word)) {
         error(begin_word, end_word, "End word not in dictionary.");
         return {};
     }
 
-    queue<vector<string>> ladder_queue;
-    set<string> visited;
+    queue<vector<string>> q;
+    set<string> seen;
+    vector<string> init;
+    init.push_back(begin_word);
+    q.push(init);
+    seen.insert(begin_word);
 
-    ladder_queue.push({begin_word});
-    visited.insert(begin_word);
+    while (!q.empty()) {
+        vector<string> curr = q.front();
+        q.pop();
+        string last = curr.back();
+        vector<string> nbrs = generate_neighbors(last, word_list);
+        std::sort(nbrs.begin(), nbrs.end());
 
-    while (!ladder_queue.empty()) {
-        vector<string> ladder = ladder_queue.front();
-        ladder_queue.pop();
-
-        const string &last_word = ladder.back();
-
-        vector<string> neighbors = generate_neighbors(last_word, word_list);
-
-        std::sort(neighbors.begin(), neighbors.end());
-
-        for (auto &neighbor : neighbors) {
-            if (!visited.count(neighbor)) {
-                visited.insert(neighbor);
-
-                vector<string> new_ladder = ladder;
-                new_ladder.push_back(neighbor);
-
-                if (neighbor == end_word) {
-                    return new_ladder;
-                }
-
-                ladder_queue.push(new_ladder);
+        for (size_t i = 0; i < nbrs.size(); i++) {
+            if (!seen.count(nbrs[i])) {
+                seen.insert(nbrs[i]);
+                vector<string> new_path = curr;
+                new_path.push_back(nbrs[i]);
+                if (nbrs[i] == end_word)
+                    return new_path;
+                q.push(new_path);
             }
         }
     }
-
     return {};
 }
 
